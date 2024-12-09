@@ -11,4 +11,4 @@ database/
 tmp_parsed/
 generated_plans/
 parsed_plans/
-*/__pycache__/*
+.idea
