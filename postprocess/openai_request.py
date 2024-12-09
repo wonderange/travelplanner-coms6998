@@ -61,7 +61,12 @@ def batchify(data: Iterable[T], batch_size: int) -> Iterable[List[T]]:
 
 
 def openai_unit_price(model_name,token_type="prompt"):
-    if 'gpt-4' in model_name:
+    if 'gpt-4o-mini' in model_name:
+        if token_type=="prompt":
+            unit = .00015
+        elif token_type=="completion":
+            unit = .0006
+    elif 'gpt-4' in model_name:
         if token_type=="prompt":
             unit = 0.03
         elif token_type=="completion":

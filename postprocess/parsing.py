@@ -30,7 +30,7 @@ if __name__ == '__main__':
                 f.write(assistant_output + '\n')
             continue
         results, _, price = prompt_chatgpt("You are a helpful assistant.", index=idx, save_path=output_file,
-                                           user_input=prompt, model_name='gpt-4-1106-preview', temperature=0)
+                                           user_input=prompt, model_name='gpt-4o-mini', temperature=0)
         total_price += price
         
     print(f"Parsing Cost:${total_price}")
