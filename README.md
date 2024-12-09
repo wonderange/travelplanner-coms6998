@@ -131,6 +131,12 @@ cd evaluation
 python eval.py --set_type $SET_TYPE --evaluation_file_path $EVALUATION_FILE_PATH
 ```
 
+Using the output from the evaluation script, we are also able to aggregate per-constraint pass rates, similar to what's shown in Table 4 in the paper. To do so, we first copy the outputs into a txt file. An example is shown in `evaluation_results/validation_baseline/constraint_breakdown_raw.txt`.
+```bash
+export PER_CONSTRAINT_RESULT_FILE_PATH=your/per/constraint/result/file/path
+python aggregate_per_constraint_pass_rate.py PER_CONSTRAINT_RESULT_FILE_PATH
+```
+
 ## ⚠️Warnings
 
 We release our evaluation scripts to foster innovation and aid the development of new methods.  We encourage the use of evaluation feedback in training set, such as implementing reinforcement learning techniques, to enhance learning. However, we strictly prohibit any form of cheating in the validation and test sets to uphold the fairness and reliability of the benchmark's evaluation process. We reserve the right to disqualify results if we find any of the following violations:
