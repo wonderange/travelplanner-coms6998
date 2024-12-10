@@ -3,7 +3,7 @@ import re
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.getcwd(), "../..")))
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
-from agents.prompts import planner_agent_prompt, cot_planner_agent_prompt, react_planner_agent_prompt,react_reflect_planner_agent_prompt,reflect_prompt
+from agents.prompts import planner_agent_prompt, cot_planner_agent_prompt, react_planner_agent_prompt,react_reflect_planner_agent_prompt,reflect_prompt, greedy_search_prompt
 # from utils.func import get_valid_name_city,extract_before_parenthesis, extract_numbers_from_filenames
 import json
 import time
@@ -58,7 +58,7 @@ if __name__ == "__main__":
 
     # model_name= ['gpt-3.5-turbo-1106','gpt-4-1106-preview','gemini','mixtral'][1]
     # set_type = ['dev','test'][0]
-    # strategy = ['direct','cot','react','reflexion'][0]
+    # strategy = ['direct','cot','react','reflexion','greedy'][0]
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--set_type", type=str, default="validation")
@@ -69,21 +69,29 @@ if __name__ == "__main__":
     directory = f'{args.output_dir}/{args.set_type}'
     if args.set_type == 'train':
         query_data_list  = load_dataset('osunlp/TravelPlanner','train')['train']
+        query_data_list = query_data_list.select(range(1))
     elif args.set_type == 'validation':
         query_data_list  = load_dataset('osunlp/TravelPlanner','validation')['validation']
+        query_data_list = query_data_list.select(range(1, 2))  # Selects the second row
     elif args.set_type == 'test':
         query_data_list  = load_dataset('osunlp/TravelPlanner','test')['test']
     numbers = [i for i in range(1,len(query_data_list)+1)]
 
     if args.strategy == 'direct':
+        print("Using strategy: direct")
         planner = Planner(model_name=args.model_name, agent_prompt=planner_agent_prompt)
     elif args.strategy == 'cot':
+        print("Using strategy: cot")
         planner = Planner(model_name=args.model_name, agent_prompt=cot_planner_agent_prompt)
     elif args.strategy == 'react':
+        print("Using strategy: react")
         planner = ReactPlanner(model_name=args.model_name, agent_prompt=react_planner_agent_prompt)
     elif args.strategy == 'reflexion':
+        print("Using strategy: reflexion")
         planner = ReactReflectPlanner(model_name=args.model_name, agent_prompt=react_reflect_planner_agent_prompt,reflect_prompt=reflect_prompt)
-
+    elif args.strategy == 'greedy':
+        print("Using strategy: greedy")
+        planner = Planner(model_name=args.model_name, agent_prompt=greedy_search_prompt)
 
     with get_openai_callback() as cb:
         for number in tqdm(numbers[:]):
