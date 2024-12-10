@@ -1,0 +1,4 @@
+MODEL_NAME=gpt-3.5-turbo-1106
+SET_TYPE=validation
+STRATEGY=greedy # This refers to greedy_v1 in the prompts
+MODE=sole-planning
