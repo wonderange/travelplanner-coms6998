@@ -226,7 +226,16 @@ You must use Finish to indict you have finished the task. And each action only c
 Given information: {text}
 Query: {query}{scratchpad} """
 
-GREEDY_SEARCH_PROMPT = """You are a trip planner using a "Greedy Search" strategy to create travel plans. Your goal is to minimize costs while ensuring the plan is complete, consistent, and logically sound. Follow these instructions:
+GREEDY_SEARCH_PROMPT = """You are a trip planner using a "Greedy Search" strategy to create travel plans. Based on 
+the provided information and query, please give me a detailed plan, including specifics such as flight numbers (e.g., 
+F0123456), restaurant names, and accommodation names. Note that all the information in your plan should be derived 
+from the provided data. You must adhere to the format given in the example. Additionally, all details should align 
+with commonsense. The symbol '-' indicates that information is unnecessary. For example, in the provided sample, 
+you do not need to plan after returning to the departure city. When you travel to two cities in one day, you should 
+note it in the 'Current City' section as in the example (i.e., from A to B). 
+
+Follow these instructions:
+
 ### 1. Transportation:
 - For each leg of the trip, retrieve transportation options from the available data.
 - Compare the costs of flights, self-driving, and taxis for the specified origin, destination, and date.
@@ -310,7 +319,7 @@ Accommodation: -
 
 ### Implementation Notes:
 - Ensure all decisions align with the user's constraints (e.g., transportation mode, accommodation type).
-- Provide a complete plan for all days of the trip.
+- Provide a complete plan for all days of the trip, ensuring every day includes all components.
 - Avoid repetitive attractions and restaurants while maintaining cost-effectiveness.
 - Use `'-'` only when no valid data is available after exhaustive attempts.
 - All decisions in this plan are derived from the "Greedy Search" strategy:
@@ -451,6 +460,150 @@ Query: {query}
 Travel Plan:
 """
 
+HEURISTIC_PLANNER_PROMPT = """You are a proficient planner. Based on the provided information and query, please give 
+me a detailed plan, including specifics such as flight numbers (e.g., F0123456), restaurant names, and accommodation 
+names. Note that all the information in your plan should be derived from the provided data. You must adhere to the 
+format given in the example. Do not include intermediary steps, explanations, or any process details. Additionally, 
+all details should align with commonsense. The symbol '-' indicates that information is unnecessary. For example, 
+in the provided sample, you do not need to plan after returning to the departure city. When you travel to two cities 
+in one day, you should note it in the 'Current City' section as in the example (i.e., from A to B). 
+
+Utilize a heuristic, forward-looking strategy inspired by recent research on hierarchical reasoning (e.g., 
+Tree-of-Thoughts) and best industry practices for complex planning with large language models. Your goal is to 
+produce a feasible travel plan that meets all constraints, including budget, accommodations, transportation modes, 
+room type and rules, cuisines, and commonsense constraints such as logical city routes and non-repetitive attractions 
+or restaurants. 
+
+Follow this strategy:
+
+1. Global Reasoning: Before detailing each day, form a rough global plan. Assess transportation and accommodation 
+costs against the budget and minimum nights stay requirements. If certain transportation modes are too expensive, 
+consider cheaper alternatives (e.g., self-driving instead of flight) early. If room rules or cuisines are specified, 
+ensure the chosen accommodations and dining options can fulfill these constraints from the start. 
+
+2. Heuristic Selection: Start by picking key cost-intensive components (accommodations, long-distance transportation) 
+that fit the constraints. If something appears too costly, choose more economical restaurants or shorter taxi routes 
+to maintain overall budget feasibility. 
+
+3. Forward-Looking Constraint Handling: Anticipate downstream issues. For example, if a particular day has fewer 
+accommodation options meeting the rules, secure a compliant accommodation first so you do not have to revise the 
+entire plan later. If certain cuisines are requested, ensure the chosen city’s restaurants support these preferences, 
+so you do not need last-minute changes. 
+
+4. Validate All Components: Once you have a global outline, fill in daily transportation, meals, attractions, 
+and accommodations. Ensure that no attraction or restaurant is repeated, that the daily plan matches the current 
+city, and that you remain within budget. If you encounter a constraint violation, refine earlier choices before 
+presenting the final plan. 
+
+5. Use '-' only if no suitable data is available after considering all options. 
+
+**Important Note:**: Ensure every day includes all components, strictly following the example format.
+
+***** Example *****
+Query: Could you create a travel plan for 7 people from Ithaca to Charlotte spanning 3 days, from March 8th to March 14th, 2022, with a budget of $30,200?
+Travel Plan:
+Day 1:
+Current City: from Ithaca to Charlotte
+Transportation: Flight Number: F3633413, from Ithaca to Charlotte, Departure Time: 05:38, Arrival Time: 07:46
+Breakfast: Nagaland's Kitchen, Charlotte
+Attraction: The Charlotte Museum of History, Charlotte
+Lunch: Cafe Maple Street, Charlotte
+Dinner: Bombay Vada Pav, Charlotte
+Accommodation: Affordable Spacious Refurbished Room in Bushwick!, Charlotte
+
+Day 2:
+Current City: Charlotte
+Transportation: -
+Breakfast: Olive Tree Cafe, Charlotte
+Attraction: The Mint Museum, Charlotte; Romare Bearden Park, Charlotte.
+Lunch: Birbal Ji Dhaba, Charlotte
+Dinner: Pind Balluchi, Charlotte
+Accommodation: Affordable Spacious Refurbished Room in Bushwick!, Charlotte
+
+Day 3:
+Current City: from Charlotte to Ithaca
+Transportation: Flight Number: F3786167, from Charlotte to Ithaca, Departure Time: 21:42, Arrival Time: 23:26
+Breakfast: Subway, Charlotte
+Attraction: Books Monument, Charlotte.
+Lunch: Olive Tree Cafe, Charlotte
+Dinner: Kylin Skybar, Charlotte
+Accommodation: -
+***** Example Ends *****
+
+Given information: {text}
+Query: {query}
+Travel Plan:"""
+
+BACKTRACKING_PLANNER_PROMPT = """You are a proficient planner. Based on the provided information and query, 
+please give me a detailed plan, including specifics such as flight numbers (e.g., F0123456), restaurant names, 
+and accommodation names. Note that all the information in your plan should be derived from the provided data. You 
+must adhere to the format given in the example and only present the **final refined travel plan**. Do not include 
+intermediary steps, explanations, or any process details. Additionally, all details should align with commonsense. 
+The symbol '-' indicates that information is unnecessary. For example, in the provided sample, you do not need to 
+plan after returning to the departure city. When you travel to two cities in one day, you should note it in the 
+'Current City' section as in the example (i.e., from A to B).
+
+Utilize an iterative refinement and backtracking strategy inspired by leading research in large language model 
+reasoning (e.g., Reflexion, iterative structured planning). Your goal is to produce a feasible travel plan that meets 
+all constraints, including budget, accommodations, transportation modes, room type and rules, cuisines, 
+and commonsense constraints such as logical city routes and non-repetitive attractions or restaurants. 
+
+Follow this strategy:
+
+1. Initial Draft: First, construct a complete preliminary plan without worrying if some constraints are slightly 
+violated. Include the cities, transportation, accommodations, meals, and attractions as per the user’s query. 
+
+2. Constraint Check: Compare the preliminary plan against all constraints:
+   - Budget: If exceeded, reduce costs by choosing cheaper accommodations, less expensive restaurants, or more cost-effective transportation.
+   - Room Rules and Types: If violated, pick alternative accommodations that fulfill these requirements.
+   - Transportation and Route: If transportation between chosen cities or times is unavailable or illogical, adjust transportation modes or departure/arrival times within the given cities and dates.
+   - Cuisine and Commonsense Constraints: If requested cuisines aren’t met, select suitable restaurants. If attractions or restaurants repeat unnecessarily, pick new ones to ensure variety and adherence to commonsense.
+
+3. Backtracking: Modify earlier choices to fix any issues, one by one. For example, if the minimum nights stay is not 
+met, swap to a different accommodation that satisfies the requirement even if it changes daily costs. Repeat this 
+refinement until all constraints are met or no further improvements are possible. 
+
+4. Finalize: Provide the final revised plan after all necessary adjustments. Use '-' only if no suitable data is 
+available even after revisions. 
+
+**Important Note:**: Ensure every day includes all components, strictly following the example format.
+
+***** Example *****
+Query: Could you create a travel plan for 7 people from Ithaca to Charlotte spanning 3 days, from March 8th to March 14th, 2022, with a budget of $30,200?
+Travel Plan:
+Day 1:
+Current City: from Ithaca to Charlotte
+Transportation: Flight Number: F3633413, from Ithaca to Charlotte, Departure Time: 05:38, Arrival Time: 07:46
+Breakfast: Nagaland's Kitchen, Charlotte
+Attraction: The Charlotte Museum of History, Charlotte
+Lunch: Cafe Maple Street, Charlotte
+Dinner: Bombay Vada Pav, Charlotte
+Accommodation: Affordable Spacious Refurbished Room in Bushwick!, Charlotte
+
+Day 2:
+Current City: Charlotte
+Transportation: -
+Breakfast: Olive Tree Cafe, Charlotte
+Attraction: The Mint Museum, Charlotte; Romare Bearden Park, Charlotte.
+Lunch: Birbal Ji Dhaba, Charlotte
+Dinner: Pind Balluchi, Charlotte
+Accommodation: Affordable Spacious Refurbished Room in Bushwick!, Charlotte
+
+Day 3:
+Current City: from Charlotte to Ithaca
+Transportation: Flight Number: F3786167, from Charlotte to Ithaca, Departure Time: 21:42, Arrival Time: 23:26
+Breakfast: Subway, Charlotte
+Attraction: Books Monument, Charlotte.
+Lunch: Olive Tree Cafe, Charlotte
+Dinner: Kylin Skybar, Charlotte
+Accommodation: -
+***** Example Ends *****
+
+Given information: {text}
+Query: {query}
+Travel Plan:"""
+
+
 planner_agent_prompt = PromptTemplate(
                         input_variables=["text","query"],
                         template = PLANNER_INSTRUCTION,
@@ -491,8 +644,17 @@ allow_budget_overrun_prompt = PromptTemplate(
                         template = ALLOW_BUDGET_OVERRUN_PROMPT,
                         )
 
-
 allow_budget_overrun_aggressive_prompt = PromptTemplate(
                         input_variables=["text","query"],
                         template = ALLOW_BUDGET_OVERRUN_AGGRESSIVE_PROMPT,
                         )
+
+heuristic_planner_agent_prompt = PromptTemplate(
+                        input_variables=["text","query"],
+                        template = HEURISTIC_PLANNER_PROMPT,
+                    )
+
+backtracking_planner_agent_prompt = PromptTemplate(
+                        input_variables=["text","query"],
+                        template = BACKTRACKING_PLANNER_PROMPT,
+                    )
