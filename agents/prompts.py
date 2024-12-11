@@ -226,8 +226,7 @@ You must use Finish to indict you have finished the task. And each action only c
 Given information: {text}
 Query: {query}{scratchpad} """
 
-GREEDY_SEARCH_PROMPT = """You are a trip planner that uses a "Greedy Search" strategy to create travel plans. Your goal is to minimize costs while providing a complete plan for the user. Follow these instructions to ensure a high-quality travel plan:
-
+GREEDY_SEARCH_PROMPT = """You are a trip planner using a "Greedy Search" strategy to create travel plans. Your goal is to minimize costs while ensuring the plan is complete, consistent, and logically sound. Follow these instructions:
 ### 1. Transportation:
 - For each leg of the trip, retrieve transportation options from the available data.
 - Compare the costs of flights, self-driving, and taxis for the specified origin, destination, and date.
@@ -237,89 +236,88 @@ GREEDY_SEARCH_PROMPT = """You are a trip planner that uses a "Greedy Search" str
   - Choose the flight with the lowest price and include its flight number, departure time, arrival time, and cost in the plan.
 - When selecting self-driving or taxi options:
   - Use the distance and cost data to calculate and compare self-driving and taxi costs.
-  - If no valid options are available for all modes, state "No valid transportation information."
-  - For days where no inter-city transportation is required, use a placeholder: "-".
+  - If no valid options are available for all modes, use `'-'` in the plan as a last resort.
+  - For days where no inter-city transportation is required, use a placeholder: `'-'`.
 - Note the transportation details in the plan, including:
   - Mode of transportation.
   - Origin and destination cities.
   - Duration, distance, and cost (if applicable).
 
 ### 2. Meals:
-- For each city, retrieve restaurants from the dataset.
-- Sort the restaurants by their average cost in ascending order and select the least expensive option for breakfast, lunch, and dinner.
-- Include the name and city of the selected restaurant in the plan.
-- Ensure that no restaurant is repeated on the same day for different meals.
-- If no valid restaurant information is available for a city, state "No valid meal information."
+- Retrieve restaurants for each city from the database.
+- Sort the restaurants by average cost (ascending) and select the least expensive option for breakfast, lunch, and dinner.
+- Try to avoid restaurant being repeated on the same day or across multiple meals.
+- If no valid restaurant information is available after all attempts, use `'-'` as a last resort.
 
 ### 3. Attractions:
-- For each city, retrieve attractions from the dataset.
-- Randomly select one attraction from the available list.
-- Ensure that attractions are not repeated if the same city is visited on multiple days.
-- Include the name and city of the selected attraction in the plan.
-- If no attraction information is available, state "No valid attraction information."
+- Retrieve attractions for each city from the database.
+- Randomly select one or more attractions from the available list, ensuring variety across days.
+- Ensure no attraction is repeated in the same city over the trip duration.
+- If no valid attraction information is available after all attempts, use `'-'` as a last resort.
 
 ### 4. Accommodations:
-- For each city, retrieve accommodations from the dataset.
-- Sort the accommodations by their price in ascending order and select the least expensive option.
-- Include the name and city of the accommodation in the plan.
-- If no accommodation information is available, state "No valid accommodation information."
+- Retrieve accommodations for each city from the database.
+- Sort by price (ascending) and select the least expensive option meeting the constraints (e.g., room type, occupancy).
+- Reuse accommodations across consecutive days in the same city when possible to reduce costs.
+- If no valid accommodation is available after all attempts, use `'-'` as a last resort.
 
 ### 5. Daily Plan:
 - For each day of the trip:
   - Specify the city where the traveler is staying or transitioning to.
   - Include the transportation details for that day.
   - List breakfast, lunch, and dinner options.
-  - Highlight the attraction to visit.
+  - Highlight the attraction(s) to visit.
   - Add accommodation details, unless it is the final day of the trip.
-- Ensure the plan is cost-effective, complete, and logically consistent.
+- Ensure logical consistency and a cost-effective approach across all components.
 
-### 6. Notes:
-- Provide a complete plan for all days of the trip.
-- Clearly state if information for any component is unavailable.
-- Random selection is used for attractions to ensure variety.
-- If no valid transportation options are available, state "No valid transportation information."
+### 6. Fallback Strategy:
+- Use `'-'` for any component only after all database-driven options have been exhausted.
+- Prioritize valid options from the database to avoid excessive `'-'` placeholders.
 
 ***** Example *****
 
-Query: Could you create a travel plan for 5 people from New York to Boston spanning 3 days, from April 10th to April 12th, 2023, with a budget of $2,500?
+Query: Please design a travel plan departing from Las Vegas and heading to Stockton for 3 days, from March 3rd to March 5th, 2022, for one person, with a budget of $1,400.
 
 Travel Plan:
 Day 1:
-Current City: from New York to Boston
-Transportation: Flight Number: F123456, from New York to Boston, Departure Time: 08:30, Arrival Time: 10:00
-Breakfast: Katz's Delicatessen, New York
-Attraction: Boston Common, Boston
-Lunch: Sam LaGrassa’s, Boston
-Dinner: Legal Sea Foods, Boston
-Accommodation: Boston Park Plaza, Boston
+Current City: from Las Vegas to Stockton
+Transportation: Flight Number: F3576711, from Las Vegas to Stockton, Departure Time: 06:01, Arrival Time: 07:28
+Breakfast: Biaggi's Ristorante Italiano, Stockton
+Attraction: Louis Park, Stockton; Buckley Cove Park, Stockton
+Lunch: Twin Brothers, Stockton
+Dinner: Muffins, Stockton
+Accommodation: Private Apt 2BR/1Bath/Kitchen/Parking in OUR HOME, Stockton
 
 Day 2:
-Current City: Boston
+Current City: Stockton
 Transportation: -
-Breakfast: Tatte Bakery, Boston
-Attraction: Freedom Trail, Boston
-Lunch: The Daily Catch, Boston
-Dinner: Union Oyster House, Boston
-Accommodation: Boston Park Plaza, Boston
+Breakfast: The Blue Tandoor, Stockton
+Attraction: Shumway Oak Grove Regional Park, Stockton; Mexican Heritage Center & Gallery, Stockton
+Lunch: Nand Bhai Chholey Bhature, Stockton
+Dinner: Wok On Fire, Stockton
+Accommodation: Private Apt 2BR/1Bath/Kitchen/Parking in OUR HOME, Stockton
 
 Day 3:
-Current City: from Boston to New York
-Transportation: Flight Number: F654321, from Boston to New York, Departure Time: 20:00, Arrival Time: 21:30
-Breakfast: Flour Bakery, Boston
-Attraction: Museum of Fine Arts, Boston
-Lunch: Neptune Oyster, Boston
-Dinner: Mike’s Pastry, Boston
+Current City: from Stockton to Las Vegas
+Transportation: Flight Number: F3576850, from Stockton to Las Vegas, Departure Time: 13:42, Arrival Time: 15:03
+Breakfast: Dimsum & Co., Stockton
+Attraction: Wat Dhammararam Buddhist Temple, Stockton
+Lunch: High Street Kitchen & Bar, Stockton
+Dinner: Ovenstory Pizza, Stockton
 Accommodation: -
 
 ***** Example Ends *****
 
 ### Implementation Notes:
+- Ensure all decisions align with the user's constraints (e.g., transportation mode, accommodation type).
+- Provide a complete plan for all days of the trip.
+- Avoid repetitive attractions and restaurants while maintaining cost-effectiveness.
+- Use `'-'` only when no valid data is available after exhaustive attempts.
 - All decisions in this plan are derived from the "Greedy Search" strategy:
   - Transportation was selected based on minimum cost, using a flight in both legs of the trip.
   - Meals were selected by choosing the least expensive available restaurant for each city.
   - Attractions were chosen randomly from the available options to ensure variety.
   - Accommodation was the least expensive option for the city.
-- If data is unavailable for any component (transportation, meals, attractions, accommodations), it is explicitly stated in the plan.
 
 Query: {query}
 Given information: {text}
