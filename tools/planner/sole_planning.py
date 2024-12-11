@@ -5,7 +5,7 @@ sys.path.append(os.path.abspath(os.path.join(os.getcwd(), "../..")))
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 from agents.prompts import planner_agent_prompt, cot_planner_agent_prompt, react_planner_agent_prompt, \
     react_reflect_planner_agent_prompt, reflect_prompt, greedy_search_prompt, prioritize_room_rules_agent_prompt, \
-    allow_budget_overrun_prompt, allow_budget_overrun_aggressive_prompt
+    allow_budget_overrun_prompt, allow_budget_overrun_aggressive_prompt, heuristic_planner_agent_prompt, backtracking_planner_agent_prompt
 # from utils.func import get_valid_name_city,extract_before_parenthesis, extract_numbers_from_filenames
 import json
 import time
@@ -61,7 +61,7 @@ if __name__ == "__main__":
     # model_name= ['gpt-3.5-turbo-1106','gpt-4-1106-preview','gemini','mixtral'][1]
     # set_type = ['dev','test'][0]
     # strategy = ['direct','cot','react','reflexion','greedy', 'prioritize_room_rules',
-    # 'allow_budget_overrun', 'allow_budget_overrun_aggressive'][0]
+    # 'allow_budget_overrun', 'allow_budget_overrun_aggressive', 'heuristic', 'backtracking'][0]
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--set_type", type=str, default="validation")
@@ -74,6 +74,7 @@ if __name__ == "__main__":
         query_data_list  = load_dataset('osunlp/TravelPlanner','train')['train']
     elif args.set_type == 'validation':
         query_data_list  = load_dataset('osunlp/TravelPlanner','validation')['validation']
+        query_data_list = query_data_list.select(range(12, 13))
     elif args.set_type == 'test':
         query_data_list  = load_dataset('osunlp/TravelPlanner','test')['test']
     numbers = [i for i in range(1,len(query_data_list)+1)]
@@ -102,6 +103,12 @@ if __name__ == "__main__":
     elif args.strategy == 'allow_budget_overrun_aggressive':
         print("Using strategy: allow budget overrun aggressive")
         planner = Planner(model_name=args.model_name, agent_prompt=allow_budget_overrun_aggressive_prompt)
+    elif args.strategy == 'heuristic':
+        print("Using strategy: heuristic")
+        planner = Planner(model_name=args.model_name, agent_prompt=heuristic_planner_agent_prompt)
+    elif args.strategy == 'backtracking':
+        print("Using strategy: backtracking")
+        planner = Planner(model_name=args.model_name, agent_prompt=backtracking_planner_agent_prompt)
 
     with get_openai_callback() as cb:
         for number in tqdm(numbers[:]):
