@@ -1,0 +1,73 @@
+You are a proficient planner. Based on the provided information and query, please give 
+me a detailed plan, including specifics such as flight numbers (e.g., F0123456), restaurant names, and accommodation 
+names. Note that all the information in your plan should be derived from the provided data. You must adhere to the 
+format given in the example. Do not include intermediary steps, explanations, or any process details. Additionally, 
+all details should align with commonsense. The symbol '-' indicates that information is unnecessary. For example, 
+in the provided sample, you do not need to plan after returning to the departure city. When you travel to two cities 
+in one day, you should note it in the 'Current City' section as in the example (i.e., from A to B). 
+
+Utilize a heuristic, forward-looking strategy inspired by recent research on hierarchical reasoning (e.g., 
+Tree-of-Thoughts) and best industry practices for complex planning with large language models. Your goal is to 
+produce a feasible travel plan that meets all constraints, including budget, accommodations, transportation modes, 
+room type and rules, cuisines, and commonsense constraints such as logical city routes and non-repetitive attractions 
+or restaurants. 
+
+Follow this strategy:
+
+1. Global Reasoning: Before detailing each day, form a rough global plan. Assess transportation and accommodation 
+costs against the budget and minimum nights stay requirements. If certain transportation modes are too expensive, 
+consider cheaper alternatives (e.g., self-driving instead of flight) early. If room rules or cuisines are specified, 
+ensure the chosen accommodations and dining options can fulfill these constraints from the start. 
+
+2. Heuristic Selection: Start by picking key cost-intensive components (accommodations, long-distance transportation) 
+that fit the constraints. If something appears too costly, choose more economical restaurants or shorter taxi routes 
+to maintain overall budget feasibility. 
+
+3. Forward-Looking Constraint Handling: Anticipate downstream issues. For example, if a particular day has fewer 
+accommodation options meeting the rules, secure a compliant accommodation first so you do not have to revise the 
+entire plan later. If certain cuisines are requested, ensure the chosen city’s restaurants support these preferences, 
+so you do not need last-minute changes. 
+
+4. Validate All Components: Once you have a global outline, fill in daily transportation, meals, attractions, 
+and accommodations. Ensure that no attraction or restaurant is repeated, that the daily plan matches the current 
+city, and that you remain within budget. If you encounter a constraint violation, refine earlier choices before 
+presenting the final plan. 
+
+5. Use '-' only if no suitable data is available after considering all options. 
+
+**Important Note:**: Ensure every day includes all components, strictly following the example format.
+
+***** Example *****
+Query: Could you create a travel plan for 7 people from Ithaca to Charlotte spanning 3 days, from March 8th to March 14th, 2022, with a budget of $30,200?
+Travel Plan:
+Day 1:
+Current City: from Ithaca to Charlotte
+Transportation: Flight Number: F3633413, from Ithaca to Charlotte, Departure Time: 05:38, Arrival Time: 07:46
+Breakfast: Nagaland's Kitchen, Charlotte
+Attraction: The Charlotte Museum of History, Charlotte
+Lunch: Cafe Maple Street, Charlotte
+Dinner: Bombay Vada Pav, Charlotte
+Accommodation: Affordable Spacious Refurbished Room in Bushwick!, Charlotte
+
+Day 2:
+Current City: Charlotte
+Transportation: -
+Breakfast: Olive Tree Cafe, Charlotte
+Attraction: The Mint Museum, Charlotte; Romare Bearden Park, Charlotte.
+Lunch: Birbal Ji Dhaba, Charlotte
+Dinner: Pind Balluchi, Charlotte
+Accommodation: Affordable Spacious Refurbished Room in Bushwick!, Charlotte
+
+Day 3:
+Current City: from Charlotte to Ithaca
+Transportation: Flight Number: F3786167, from Charlotte to Ithaca, Departure Time: 21:42, Arrival Time: 23:26
+Breakfast: Subway, Charlotte
+Attraction: Books Monument, Charlotte.
+Lunch: Olive Tree Cafe, Charlotte
+Dinner: Kylin Skybar, Charlotte
+Accommodation: -
+***** Example Ends *****
+
+Given information: {text}
+Query: {query}
+Travel Plan:
