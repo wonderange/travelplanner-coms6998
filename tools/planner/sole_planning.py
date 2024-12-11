@@ -74,7 +74,6 @@ if __name__ == "__main__":
         query_data_list  = load_dataset('osunlp/TravelPlanner','train')['train']
     elif args.set_type == 'validation':
         query_data_list  = load_dataset('osunlp/TravelPlanner','validation')['validation']
-        query_data_list = query_data_list.select(range(12, 13))
     elif args.set_type == 'test':
         query_data_list  = load_dataset('osunlp/TravelPlanner','test')['test']
     numbers = [i for i in range(1,len(query_data_list)+1)]
