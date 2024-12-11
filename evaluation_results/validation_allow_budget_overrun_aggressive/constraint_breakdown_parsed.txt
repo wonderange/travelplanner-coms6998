@@ -1,0 +1,18 @@
+Commonsense Constraint
+Constraint                          Easy    Medium      Hard
+Complete Information                41.7      50.0      43.3
+Diverse Attractions                100.0      98.3      98.3
+Diverse Restaurants                 81.7      75.0      86.7
+Minimum Nights Stay                 36.7      18.3      15.0
+Non-conf. Transportation            71.7      66.7      90.0
+Reasonable City Route               53.3      65.0      53.3
+Within Current City                 60.0      56.7      75.0
+Within Sandbox                      21.7      36.7      36.7
+
+Hard Constraint
+Constraint                          Easy    Medium      Hard
+Budget                               7.5       7.5       2.5
+Cuisine                                -      47.9      13.6
+Room Rule                              -      20.0      10.5
+Room Type                              -      22.2      19.2
+Transportation                         -         -      32.4

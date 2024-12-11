@@ -1,0 +1,6 @@
+Delivery Rate: 100.0%
+Commonsense Constraint Micro Pass Rate: 59.65277777777778%
+Commonsense Constraint Macro Pass Rate: 1.6666666666666667%
+Hard Constraint Micro Pass Rate: 10.0%
+Hard Constraint Macro Pass Rate: 2.7777777777777777%
+Final Pass Rate: 0.0%
