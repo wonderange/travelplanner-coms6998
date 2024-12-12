@@ -248,7 +248,18 @@ def evaluation(query_data, tested_data):
     return_info['valid_room_rule'] = is_valid_room_rule(query_data, tested_data)
     return_info['valid_transportation'] = is_valid_transportation(query_data, tested_data)
     return_info['valid_room_type'] = is_valid_room_type(query_data, tested_data)
-    return_info['valid_cost'] = (bool(get_total_cost(query_data, tested_data) <= query_data['budget']), None)
+    plan_total_cost = get_total_cost(query_data, tested_data)
+    budget_discrepancy_pct = (plan_total_cost - query_data['budget']) / query_data['budget'] * 100
+    return_info['valid_cost'] = (bool(plan_total_cost <= query_data['budget']), budget_discrepancy_pct)
+    return return_info
+
+def evaluation_default(query_data, tested_data):
+    return_info = {}
+    return_info['valid_cuisine'] = (False, "") if query_data['local_constraint']['cuisine'] else (None, None)
+    return_info['valid_room_rule'] = (False, "") if query_data['local_constraint']['house rule'] else (None, None)
+    return_info['valid_transportation'] = (False, "") if query_data['local_constraint']['transportation'] else (None, None)
+    return_info['valid_room_type'] = (False, "") if query_data['local_constraint']['room type'] else (None, None)
+    return_info['valid_cost'] = (False, None)
     return return_info
 
 def boolean_evaluation(query_data, tested_data):

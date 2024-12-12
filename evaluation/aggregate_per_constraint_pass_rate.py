@@ -27,52 +27,38 @@ def preprocess_to_valid_json(text):
     return text
 
 def aggregate_results(constraint_data):
-    # We have difficulties: easy, medium, hard
     difficulties = ["easy", "medium", "hard"]
-
-    # Gather all constraints from all difficulties/scenarios
     constraints_set = set()
+
     for diff in difficulties:
         if diff in constraint_data:
             for scenario_key, scenario_data in constraint_data[diff].items():
-                for c in scenario_data.keys():
-                    constraints_set.add(c)
+                constraints_set.update(scenario_data.keys())
 
     constraints_list = sorted(list(constraints_set))
 
-    # This helper function computes the percentage if possible
-    def compute_percentage(entry):
-        t = entry.get("true", 0)
-        f = entry.get("false", 0)
-
-        # Try to get total from entry, if not present or zero, infer total
-        total = entry.get("total", None)
+    def compute_percentage(aggregated):
+        t = aggregated.get("true", 0)
+        f = aggregated.get("false", 0)
+        total = aggregated.get("total", None)
         if total is None or total == 0:
-            # Compute total from true+false if possible
             total = t + f
-
-        if total > 0:
-            return (t / total) * 100.0
-        else:
-            return None
+        return (t / total) * 100.0 if total > 0 else None
 
     results = {diff: {} for diff in difficulties}
+
     for diff in difficulties:
         if diff not in constraint_data:
             continue
         for c in constraints_list:
-            scenario_values = []
+            aggregated = {"true": 0, "false": 0, "total": 0}
             for scenario_key, scenario_data in constraint_data[diff].items():
                 if c in scenario_data:
-                    pct = compute_percentage(scenario_data[c])
-                    if pct is not None:
-                        scenario_values.append(pct)
-            if scenario_values:
-                avg_pct = sum(scenario_values) / len(scenario_values)
-            else:
-                avg_pct = None
-            results[diff][c] = avg_pct
-
+                    entry = scenario_data[c]
+                    aggregated["true"] += entry.get("true", 0)
+                    aggregated["false"] += entry.get("false", 0)
+                    aggregated["total"] += entry.get("total", entry.get("true", 0) + entry.get("false", 0))
+            results[diff][c] = compute_percentage(aggregated)
     return constraints_list, results
 
 def print_table(title, constraints, results):
@@ -113,6 +99,19 @@ def main(input_file):
     if "Hard Constraint" in data:
         hard_constraints, hard_results = aggregate_results(data["Hard Constraint"])
         print_table("Hard Constraint", hard_constraints, hard_results)
+
+    # Process Hard Constraint (common denominator)
+    if "Hard Constraint (common denominator)" in data:
+        common_denom_constraints, common_denom_results = aggregate_results(
+            data["Hard Constraint (common denominator)"])
+        print_table("Hard Constraint (common denominator)", common_denom_constraints, common_denom_results)
+
+    # Process budget statistics
+    if "Budget statistics" in data:
+        budget_results = data["Budget statistics"]
+        budget_constraints = ["Met constraints % gap",
+                              "Not met constraints % gap"]
+        print_table("Budget discrepancies", budget_constraints, budget_results)
 
 if __name__ == "__main__":
     # Check if the input file is provided
