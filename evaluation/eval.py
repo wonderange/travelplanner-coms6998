@@ -2,6 +2,7 @@ import os, sys
 sys.path.append(os.path.abspath(os.path.join(os.getcwd(), "..")))
 from commonsense_constraint import evaluation as commonsense_eval
 from hard_constraint import evaluation as hard_eval
+from hard_constraint import evaluation_default as hard_eval_default
 import json
 from tqdm import tqdm
 from datasets import load_dataset
@@ -39,6 +40,34 @@ def statistics(commonsense_statistic):
                 
     return result
 
+def budget_stats(statistic):
+    result = {level: {} for level in statistic}
+
+    for level, days in statistic.items():
+        true_values = []
+        false_values = []
+        for day, dicts in days.items():
+            for dct in dicts:
+                if dct:
+                    for key, data in dct.items():
+                        if key == "valid_cost":
+                            is_met = data[0]
+                            discrepancy = data[1]
+                            if is_met:
+                                true_values.append(discrepancy)
+                            else:
+                                false_values.append(discrepancy)
+
+        if len(true_values) > 0:
+            result[level]["Met constraints % gap"] = sum(true_values) / len(true_values)
+        else:
+            result[level]["Met constraints % gap"] = None
+        if len(false_values) > 0:
+            result[level]["Not met constraints % gap"] = sum(false_values) / len(false_values)
+        else:
+            result[level]["Not met constraints % gap"] = None
+    return result
+
 def paper_term_mapping(commonsense_constraint_record, hard_constraint_record):
     mapping_dict = {'is_valid_information_in_current_city':'Within Current City','is_valid_information_in_sandbox':'Within Sandbox','is_reasonalbe_visiting_city':'Reasonable City Route','is_valid_restaurants':'Diverse Restaurants','is_valid_transportation':'Non-conf. Transportation','is_valid_attractions':'Diverse Attractions','is_valid_accommodation':'Minimum Nights Stay','is_not_absent':'Complete Information','valid_cost':'Budget','valid_room_rule':'Room Rule','valid_cuisine':'Cuisine','valid_room_type':'Room Type','valid_transportation':'Transportation'}
     remap_commonsense_constraint_record = {level:{day:{} for day in [3,5,7]} for level in ['easy','medium','hard']} 
@@ -59,7 +88,8 @@ def eval_score(set_type: str, file_path: str):
 
     
     query_data_list = [x for x in query_data_list]
-    hardConstraint_statistic= {level:{day:[] for day in [3,5,7]} for level in ['easy','medium','hard']} 
+    hardConstraint_statistic= {level:{day:[] for day in [3,5,7]} for level in ['easy','medium','hard']}
+    hardConstraint_statistic_common_denominator = {level: {day: [] for day in [3, 5, 7]} for level in ['easy', 'medium', 'hard']}
     commonsenseConstraint_statistic = {level:{day:[] for day in [3,5,7]} for level in ['easy','medium','hard']} 
     tested_plans = load_line_json_data(file_path)
     delivery_cnt = 0
@@ -82,14 +112,18 @@ def eval_score(set_type: str, file_path: str):
 
         if commonsense_info_box and commonsense_info_box['is_not_absent'][0] and commonsense_info_box['is_valid_information_in_sandbox'][0]:
             hard_info_box = hard_eval(query_data,tested_plan['plan'])
+            hard_info_box_common_denominator = hard_info_box
         else:
             hard_info_box = None
+            hard_info_box_common_denominator = hard_eval_default(query_data, tested_plan['plan'])
 
         plan_constraint_store.append({'commonsense_constraint':commonsense_info_box,'hard_constraint':hard_info_box})
 
         commonsenseConstraint_statistic[query_data['level']][query_data['days']].append(commonsense_info_box)
         hardConstraint_statistic[query_data['level']][query_data['days']].append(hard_info_box)
+        hardConstraint_statistic_common_denominator[query_data['level']][query_data['days']].append(hard_info_box_common_denominator)
 
+    budget_statistic = budget_stats(hardConstraint_statistic)
     constraint_record = {key: {day: {'house rule':0, 'cuisine':0, 'room type':0, 'transportation':0} for day in [3,5,7]} for key in ['medium','hard']}
     constraint_mapping = {'house rule':'valid_room_rule','cuisine':'valid_cuisine','room type':'valid_room_type','transportation':'valid_transportation'}
     mapping_constraint_record = {key: {day: {'valid_room_rule':0, 'valid_cuisine':0, 'valid_room_type':0, 'valid_transportation':0} for day in [3,5,7]} for key in ['medium','hard']}
@@ -104,6 +138,7 @@ def eval_score(set_type: str, file_path: str):
     
     commonsenseConstraint_statistic_processed = statistics(commonsenseConstraint_statistic)
     hardConstraint_statistic_processed = statistics(hardConstraint_statistic)
+    hardConstraint_statistic_processed_common_denominator = statistics(hardConstraint_statistic_common_denominator)
 
 
     data_record = {key:{day:[] for day in [3,5,7]} for key in ['easy','medium','hard']}
@@ -178,6 +213,7 @@ def eval_score(set_type: str, file_path: str):
     result = {}
 
     remap_commonsense_constraint_record, remap_hard_constraint_record = paper_term_mapping(commonsenseConstraint_statistic_processed, hardConstraint_statistic_processed)
+    _, remap_hard_constraint_common_denominator_record = paper_term_mapping(commonsenseConstraint_statistic_processed, hardConstraint_statistic_processed_common_denominator)
 
     if set_type == 'train':
         result['Delivery Rate'] = delivery_cnt / 45
@@ -204,7 +240,10 @@ def eval_score(set_type: str, file_path: str):
         result['Final Pass Rate'] = final_all_cnt / 1000
     
 
-    return result, {"Commonsense Constraint":remap_commonsense_constraint_record, "Hard Constraint":remap_hard_constraint_record}
+    return result, {"Commonsense Constraint":remap_commonsense_constraint_record,
+                    "Hard Constraint":remap_hard_constraint_record,
+                    "Hard Constraint (common denominator)": remap_hard_constraint_common_denominator_record,
+                    "Budget statistics": budget_statistic}
 
 
 if __name__ == '__main__':

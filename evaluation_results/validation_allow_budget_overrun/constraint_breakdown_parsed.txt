@@ -12,7 +12,20 @@ Within Sandbox                      30.0      40.0      36.7
 Hard Constraint
 Constraint                          Easy    Medium      Hard
 Budget                              10.0      10.0       2.5
-Cuisine                                -      52.1      24.4
-Room Rule                              -      10.0       7.9
-Room Type                              -      27.8      26.9
+Cuisine                                -      50.0      26.3
+Room Rule                              -       9.1       7.9
+Room Type                              -      33.3      24.1
 Transportation                         -         -      32.4
+
+Hard Constraint (common denominator)
+Constraint                          Easy    Medium      Hard
+Budget                               6.7       6.7       1.7
+Cuisine                                -      31.8      19.2
+Room Rule                              -       5.0       5.3
+Room Type                              -      27.8      15.2
+Transportation                         -         -      21.6
+
+Budget discrepancies
+Constraint                          Easy    Medium      Hard
+Met constraints % gap              -17.4     -25.6     -18.9
+Not met constraints % gap           54.3      79.6      76.4
