@@ -95,16 +95,11 @@ def main(input_file):
         commonsense_constraints, commonsense_results = aggregate_results(data["Commonsense Constraint"])
         print_table("Commonsense Constraint", commonsense_constraints, commonsense_results)
 
-    # Process Hard Constraint
-    if "Hard Constraint" in data:
-        hard_constraints, hard_results = aggregate_results(data["Hard Constraint"])
-        print_table("Hard Constraint", hard_constraints, hard_results)
-
     # Process Hard Constraint (common denominator)
     if "Hard Constraint (common denominator)" in data:
         common_denom_constraints, common_denom_results = aggregate_results(
             data["Hard Constraint (common denominator)"])
-        print_table("Hard Constraint (common denominator)", common_denom_constraints, common_denom_results)
+        print_table("Hard Constraint", common_denom_constraints, common_denom_results)
 
     # Process budget statistics
     if "Budget statistics" in data:
@@ -112,6 +107,11 @@ def main(input_file):
         budget_constraints = ["Met constraints % gap",
                               "Not met constraints % gap"]
         print_table("Budget discrepancies", budget_constraints, budget_results)
+
+    # Process Hard Constraint
+    if "Hard Constraint" in data:
+        hard_constraints, hard_results = aggregate_results(data["Hard Constraint"])
+        print_table("Hard Constraint (Original)", hard_constraints, hard_results)
 
 if __name__ == "__main__":
     # Check if the input file is provided
