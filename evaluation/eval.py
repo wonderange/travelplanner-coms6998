@@ -138,8 +138,10 @@ def eval_score(set_type: str, file_path: str):
     
     commonsenseConstraint_statistic_processed = statistics(commonsenseConstraint_statistic)
     hardConstraint_statistic_processed = statistics(hardConstraint_statistic)
-    hardConstraint_statistic_processed_common_denominator = statistics(hardConstraint_statistic_common_denominator)
 
+    print("Detailed hard constraint descriptions")
+    print(hardConstraint_statistic)
+    print("------------------")
 
     data_record = {key:{day:[] for day in [3,5,7]} for key in ['easy','medium','hard']}
 
@@ -213,7 +215,24 @@ def eval_score(set_type: str, file_path: str):
     result = {}
 
     remap_commonsense_constraint_record, remap_hard_constraint_record = paper_term_mapping(commonsenseConstraint_statistic_processed, hardConstraint_statistic_processed)
-    _, remap_hard_constraint_common_denominator_record = paper_term_mapping(commonsenseConstraint_statistic_processed, hardConstraint_statistic_processed_common_denominator)
+
+    remap_hard_constraint_common_denominator_record = {key: {day: {} for day in [3, 5, 7]} for key in ['easy', 'medium', 'hard']}
+    tmp_constraint_mapping = {'valid_cost': 'Budget', 'valid_room_rule': 'Room Rule', 'valid_cuisine': 'Cuisine',
+                          'valid_room_type': 'Room Type', 'valid_transportation': 'Transportation'}
+    for level, level_dict in hardConstraint_statistic_common_denominator.items():
+        for day, day_item_list in level_dict.items():
+            for item_record in day_item_list:
+                for c in key_dict["hard"]:
+                    c_value = item_record[c]
+                    if tmp_constraint_mapping[c] not in remap_hard_constraint_common_denominator_record[level][day]:
+                        remap_hard_constraint_common_denominator_record[level][day][tmp_constraint_mapping[c]] = {"true": 0, "false": 0, "total": 0}
+                    is_met = c_value[0]
+                    if is_met:
+                        remap_hard_constraint_common_denominator_record[level][day][tmp_constraint_mapping[c]]["true"] += 1
+                        remap_hard_constraint_common_denominator_record[level][day][tmp_constraint_mapping[c]]["total"] += 1
+                    elif is_met == False:
+                        remap_hard_constraint_common_denominator_record[level][day][tmp_constraint_mapping[c]]["false"] += 1
+                        remap_hard_constraint_common_denominator_record[level][day][tmp_constraint_mapping[c]]["total"] += 1
 
     if set_type == 'train':
         result['Delivery Rate'] = delivery_cnt / 45

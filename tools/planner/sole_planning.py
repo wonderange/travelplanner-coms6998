@@ -5,7 +5,8 @@ sys.path.append(os.path.abspath(os.path.join(os.getcwd(), "../..")))
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 from agents.prompts import planner_agent_prompt, cot_planner_agent_prompt, react_planner_agent_prompt, \
     react_reflect_planner_agent_prompt, reflect_prompt, greedy_search_prompt, prioritize_room_rules_agent_prompt, \
-    allow_budget_overrun_prompt, allow_budget_overrun_aggressive_prompt, heuristic_planner_agent_prompt, backtracking_planner_agent_prompt
+    allow_budget_overrun_prompt, allow_budget_overrun_aggressive_prompt, heuristic_planner_agent_prompt, \
+    backtracking_planner_agent_prompt, backtracking_with_prioritization_prompt
 # from utils.func import get_valid_name_city,extract_before_parenthesis, extract_numbers_from_filenames
 import json
 import time
@@ -108,6 +109,9 @@ if __name__ == "__main__":
     elif args.strategy == 'backtracking':
         print("Using strategy: backtracking")
         planner = Planner(model_name=args.model_name, agent_prompt=backtracking_planner_agent_prompt)
+    elif args.strategy == 'backtracking_with_prioritization':
+        print("Using strategy: backtracking with prioritization")
+        planner = Planner(model_name=args.model_name, agent_prompt=backtracking_with_prioritization_prompt)
 
     with get_openai_callback() as cb:
         for number in tqdm(numbers[:]):
