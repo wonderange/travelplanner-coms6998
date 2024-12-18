@@ -41,6 +41,9 @@ def statistics(commonsense_statistic):
     return result
 
 def budget_stats(statistic):
+    """
+    Generate statistics for each level on the discrepancy between actual cost and budget
+    """
     result = {level: {} for level in statistic}
 
     for level, days in statistic.items():
@@ -115,6 +118,7 @@ def eval_score(set_type: str, file_path: str):
             hard_info_box_common_denominator = hard_info_box
         else:
             hard_info_box = None
+            # Return default instead of None because None would not be counted in the denominator
             hard_info_box_common_denominator = hard_eval_default(query_data, tested_plan['plan'])
 
         plan_constraint_store.append({'commonsense_constraint':commonsense_info_box,'hard_constraint':hard_info_box})
@@ -216,6 +220,7 @@ def eval_score(set_type: str, file_path: str):
 
     remap_commonsense_constraint_record, remap_hard_constraint_record = paper_term_mapping(commonsenseConstraint_statistic_processed, hardConstraint_statistic_processed)
 
+    # Calculate hard constraint pass rates based on common denominator
     remap_hard_constraint_common_denominator_record = {key: {day: {} for day in [3, 5, 7]} for key in ['easy', 'medium', 'hard']}
     tmp_constraint_mapping = {'valid_cost': 'Budget', 'valid_room_rule': 'Room Rule', 'valid_cuisine': 'Cuisine',
                           'valid_room_type': 'Room Type', 'valid_transportation': 'Transportation'}

@@ -27,6 +27,9 @@ def preprocess_to_valid_json(text):
     return text
 
 def aggregate_results(constraint_data):
+    """
+    Based on constraint pass rates for individual records, aggregate by on the (constraint, level) granularity
+    """
     difficulties = ["easy", "medium", "hard"]
     constraints_set = set()
 
@@ -80,7 +83,7 @@ def print_table(title, constraints, results):
 
 def main(input_file):
     """
-    Main function to read input data from a .txt file, process it, and print the results.
+    Read raw outputs from eval.py, parse and aggregate the results and print in table format
     """
     # Read the input data from the text file
     with open(input_file, "r") as f:
